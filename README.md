@@ -10,3 +10,20 @@ Foram utilizados os servidos de:
 1- Firebase Authentication - Para criação e autenticação
 2- Firebase Firestore - Para o armazentamento dos usuário e conversas.
 3- Firebase Storage - Para o armazenamento das fotos dos usuários.
+
+
+# Configurar o período de tempo (última semana)
+$startDate = (Get-Date).AddDays(-7)
+
+# Obter eventos de log relevantes
+$events = Get-EventLog -LogName Security -After $startDate |
+          Where-Object { $_.EventID -eq 4624 -and $_.Message -like "*Logon Type: 3*" }
+
+# Processar os eventos e exibir informações
+foreach ($event in $events) {
+    $xml = [xml]$event.ToXml()
+    $userName = $xml.Event.EventData.Data | Where-Object { $_.Name -eq 'TargetUserName' } | Select-Object -ExpandProperty '#text'
+    $computerName = $xml.Event.EventData.Data | Where-Object { $_.Name -eq 'WorkstationName' } | Select-Object -ExpandProperty '#text'
+    
+    Write-Host "Usuário: $userName, Computador: $computerName, Hora: $($event.TimeGenerated)"
+}
